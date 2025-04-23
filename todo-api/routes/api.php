@@ -3,11 +3,15 @@
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\ApiController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 
 Route::post('/register', [ApiController::class, 'register']);
 Route::post('/login', [ApiController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
     // Routes existantes
     Route::get('/tasks/shared', [TaskController::class, 'shared']);
 });

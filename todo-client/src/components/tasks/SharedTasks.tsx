@@ -1,62 +1,61 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../utils/axios';
 
-interface SharedTask {
+interface Task {
   id: number;
   title: string;
   description: string;
   status: 'pending' | 'completed';
   user: {
-    id: number;
     name: string;
     email: string;
   };
 }
 
-const SharedTasks = () => {
-  const [sharedTasks, setSharedTasks] = useState<SharedTask[]>([]);
+interface SharedTasksProps {
+  onTasksChange: () => void;
+}
+
+const SharedTasks = ({ onTasksChange }: SharedTasksProps) => {
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [error, setError] = useState('');
 
   const fetchSharedTasks = useCallback(async () => {
     try {
       const response = await api.get('/tasks/shared');
-      setSharedTasks(response.data);
+      setTasks(response.data);
+      onTasksChange(); // Ajout de l'appel à onTasksChange après la mise à jour
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error fetching shared tasks');
     }
-  }, []);
+  }, [onTasksChange]); // Ajout de onTasksChange dans les dépendances
 
   useEffect(() => {
     fetchSharedTasks();
   }, [fetchSharedTasks]);
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-6">Tasks from Other Users</h2>
+    <div className="grid gap-4">
       {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>}
-      <div className="grid gap-4">
-        {sharedTasks.map((task) => (
-          <div key={task.id} className="bg-white p-4 rounded-lg shadow">
-            <div className="flex items-center gap-3">
-              <span className={`w-3 h-3 rounded-full ${
-                task.status === 'completed' ? 'bg-green-500' : 'bg-blue-500'
-              }`} />
-              <div className="flex-1">
-                <h3 className="text-xl">{task.title}</h3>
-                <p className="text-gray-600">{task.description}</p>
-                <div className="flex justify-between items-center mt-2">
-                  <span className={`text-sm ${
-                    task.status === 'completed' ? 'text-green-500' : 'text-blue-500'
-                  }`}>
-                    {task.status === 'completed' ? 'Completed' : 'In Progress'}
-                  </span>
-                  <span className="text-sm text-gray-500">Created by: {task.user.name}</span>
-                </div>
-              </div>
+      {tasks.map((task) => (
+        <div key={task.id} className="bg-white p-4 rounded-lg shadow border border-gray-200">
+          <div className="flex justify-between items-start mb-2">
+            <div>
+              <h3 className="text-lg font-semibold">{task.title}</h3>
+              <p className="text-sm text-gray-600">Created by: {task.user.name}</p>
             </div>
+            <span className={`px-2 py-1 rounded text-sm ${
+              task.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+            }`}>
+              {task.status}
+            </span>
           </div>
-        ))}
-      </div>
+          <p className="text-gray-700">{task.description}</p>
+        </div>
+      ))}
+      {tasks.length === 0 && (
+        <p className="text-center text-gray-500">No shared tasks available</p>
+      )}
     </div>
   );
 };

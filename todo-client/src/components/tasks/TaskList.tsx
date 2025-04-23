@@ -12,9 +12,10 @@ interface Task {
 
 interface TaskListProps {
   filter: 'all' | 'completed' | 'pending';
+  onTasksChange: () => void;
 }
 
-const TaskList = ({ filter }: TaskListProps) => {
+const TaskList = ({ filter, onTasksChange }: TaskListProps) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [error, setError] = useState('');
 
@@ -32,10 +33,11 @@ const TaskList = ({ filter }: TaskListProps) => {
     try {
       await api.patch(`/tasks/${taskId}/toggle`);
       fetchTasks();
+      onTasksChange(); // Ajout de cette ligne
     } catch (err) {
       setError('Error updating task');
     }
-  }, [fetchTasks]);
+  }, [fetchTasks, onTasksChange]);
 
   const handleDelete = useCallback(async (taskId: number) => {
     try {
